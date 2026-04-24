@@ -31,7 +31,8 @@ class Strat_815(Strategy):
 
         if curr_time >= time(9,30):
             curr_close_amount = self.data.Close[-1]
-        
+            curr_low_amount = self.data.Low[-1]
+            curr_high_amount = self.data.High[-1]
             # find a breakout
             if not self.breakout_long or not self.breakout_short:
                 if curr_close_amount > self.high815:
@@ -52,6 +53,48 @@ class Strat_815(Strategy):
             look for another breakout, we can reset the breakout_long variable to False and wait 
             for another breakout signal
             '''
+            
+            if self.breakout_long and not self.position:
+                
+                #retest candle passes
+                if curr_low_amount < self.high815 < curr_close_amount:
+                    entry_price = curr_close_amount
+                    stop_loss = self.low815
+                    risk = entry_price - stop_loss
+                    take_profit = entry_price + (risk * 2)
+                    self.buy(sl=stop_loss, tp=take_profit)
+                
+                if curr_close_amount < self.high815:
+                    self.breakout_long = False     
+            
+            '''
+            retest short example:
+            
+            if a price breaks the low of 8-815 we look for shorts. to retest the breakout the next candles to come after the breakout have to have a 
+            high greater than the 8-815 low but a close position below the 8-815 low, then we can enter a short position.
+            
+            during the retest stage if the candle closes above the low of 8-815 then the retest failed and we have to look
+            for another breakout signal
+            '''
+            
+            if self.breakout_short and not self.position:
+                
+                # The Retest
+                if curr_high_amount > self.low815 > curr_close_amount:
+                    entry_price = curr_close_amount
+                    stop_loss = self.high815
+                    risk = stop_loss - entry_price
+                    take_profit = entry_price - (risk * 2)
+                    
+                    self.sell(sl=stop_loss, tp=take_profit)
+                
+                # Retest fails
+                if curr_close_amount > self.low815:
+                    self.breakout_short = False     
+            
+                     
+            
+                
 
         pass
 
